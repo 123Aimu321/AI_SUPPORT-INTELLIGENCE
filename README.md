@@ -1,92 +1,247 @@
-Absolutely. Below is a **complete, professional README.md** for your `ai-support-intelligence` repository, covering the assessment requirements, architecture, setup, API usage, UI, LLM integration, anomaly logic, testing, troubleshooting, and walkthrough points.
-
 # AI Support Intelligence
 
 An AI-powered customer support intelligence system built for the **DOTMappers IT Pvt. Ltd. AI Engineer Technical Assessment**.
 
-The system ingests customer support tickets from a CSV file, stores them in SQLite, understands natural-language questions using an LLM, converts them into structured query intents, executes safe database queries, detects support-ticket anomalies, and exposes the functionality through a FastAPI REST API and Streamlit web interface.
+The system ingests support tickets from a CSV file, stores them in SQLite, understands natural-language questions using an LLM, executes safe database queries, detects anomalies, and exposes the functionality through a FastAPI REST API and Streamlit web interface.
 
 ---
 
-## 📌 Project Overview
+## Features
 
-Customer support teams often have large amounts of ticket data but need a simple way to ask questions such as:
+* CSV data ingestion using Pandas
+* SQLite database for ticket storage
+* Natural-language querying using Groq LLM
+* Structured intent generation
+* Safe query validation
+* Parameterized SQL queries
+* Support-ticket anomaly detection
+* FastAPI REST API
+* Streamlit web interface
+* API health monitoring
+* Pytest test suite
+* No paid database or infrastructure required
 
-* How many tickets are currently open?
-* Which agent resolved the most tickets this month?
-* Show me all Critical tickets not resolved within 12 hours.
-* What is the average customer rating for Technical category tickets?
-* Are there any anomalies in resolution times this week?
+---
 
-This project provides an AI-powered interface for answering these questions without requiring the user to write SQL.
+## System Architecture
 
-### Core Workflow
+```mermaid
+flowchart TD
+    A[support_tickets.csv] --> B[Data Ingestion]
+    B --> C[SQLite Database]
+
+    U[User] --> S[Streamlit UI]
+    S --> API[FastAPI REST API]
+
+    API --> Q[Query Service]
+    Q --> L[Groq LLM]
+    L --> I[Structured Intent]
+    I --> V[Intent Validation]
+    V --> SQL[Safe SQL Query]
+    SQL --> C
+
+    C --> R[Query Result]
+    R --> L2[LLM Explanation]
+    L2 --> API
+
+    API --> AN[Anomaly Service]
+    AN --> C
+    AN --> D[Deterministic Anomaly Detection]
+    D --> API
+
+    API --> H[Health Endpoint]
+```
+
+### Query Flow
 
 ```text
-                 support_tickets.csv
-                         │
-                         ▼
-                  Data Ingestion
-                         │
-                         ▼
-                  SQLite Database
-                         │
-              ┌──────────┴──────────┐
-              │                     │
-              ▼                     ▼
-        Natural Language       Anomaly Engine
-             Query                    │
-              │                       │
-              ▼                       ▼
-          Groq LLM              Deterministic
-       Intent Detection        Anomaly Detection
-              │                       │
-              ▼                       │
-       Intent Validation              │
-              │                       │
-              ▼                       │
-         Safe SQL Query               │
-              │                       │
-              └──────────┬────────────┘
-                         ▼
-                    FastAPI REST API
-                         │
-                         ▼
-                   Streamlit UI
+User Question
+      |
+      v
+Streamlit UI
+      |
+      | HTTP POST /query
+      v
+FastAPI
+      |
+      v
+Groq LLM
+      |
+      v
+Structured Intent
+      |
+      v
+Intent Validation
+      |
+      v
+Application-generated SQL
+      |
+      v
+SQLite Database
+      |
+      v
+Query Result
+      |
+      v
+LLM Explanation
+      |
+      v
+FastAPI Response
+      |
+      v
+Streamlit UI
+```
+
+### Anomaly Flow
+
+```text
+SQLite Database
+      |
+      v
+Anomaly Service
+      |
+      v
+Rule-based Checks
+      |
+      +---- Critical unresolved tickets
+      |
+      +---- High unresolved tickets
+      |
+      +---- Long unresolved tickets
+      |
+      +---- Resolution-time outliers
+      |
+      +---- Response-time outliers
+      |
+      v
+Anomaly Results
+      |
+      v
+FastAPI /anomalies
+      |
+      v
+Streamlit UI
 ```
 
 ---
 
-# ✨ Features
+# Project Structure
 
-## 1. CSV Data Ingestion
-
-The application automatically loads the provided `support_tickets.csv` dataset into SQLite.
-
-The ingestion layer:
-
-* Validates required columns
-* Parses date fields
-* Converts numerical fields
-* Removes unnecessary whitespace
-* Validates ticket IDs
-* Detects duplicate ticket IDs
-* Detects missing required identifiers
-* Creates/refreshes the SQLite database
+```text
+ai-support-intelligence/
+|
++-- app/
+|   +-- __init__.py
+|   +-- main.py
+|   |
+|   +-- api/
+|   |   +-- __init__.py
+|   |   +-- routes_query.py
+|   |   +-- routes_anomaly.py
+|   |   +-- routes_health.py
+|   |
+|   +-- core/
+|   |   +-- __init__.py
+|   |   +-- config.py
+|   |   +-- database.py
+|   |
+|   +-- services/
+|   |   +-- __init__.py
+|   |   +-- llm_service.py
+|   |   +-- query_service.py
+|   |   +-- anomaly_service.py
+|   |   +-- ingestion.py
+|   |
+|   +-- models/
+|   |   +-- __init__.py
+|   |   +-- schemas.py
+|   |
+|   +-- utils/
+|       +-- __init__.py
+|       +-- sql_validator.py
+|
++-- data/
+|   +-- support_tickets.csv
+|
++-- database/
+|   +-- support_tickets.db
+|
++-- ui/
+|   +-- streamlit_app.py
+|
++-- tests/
+|   +-- test_api.py
+|   +-- test_anomaly.py
+|   +-- test_query.py
+|
++-- .env.example
++-- .gitignore
++-- requirements.txt
++-- README.md
+```
 
 ---
 
-## 2. Natural-Language Querying
+# Technology Stack
 
-Users can ask questions using normal English instead of SQL.
+| Component            | Technology           |
+| -------------------- | -------------------- |
+| Language             | Python               |
+| API                  | FastAPI              |
+| API Server           | Uvicorn              |
+| UI                   | Streamlit            |
+| Database             | SQLite               |
+| Data Processing      | Pandas               |
+| Numerical Processing | NumPy                |
+| Database Layer       | SQLAlchemy           |
+| LLM                  | Groq                 |
+| LLM Model            | `openai/gpt-oss-20b` |
+| Testing              | Pytest               |
 
-Example:
+---
+
+# Dataset
+
+The application uses the provided:
+
+```text
+data/support_tickets.csv
+```
+
+The assessment dataset contains **500 support tickets**.
+
+## Dataset Columns
+
+| Column                | Description                    |
+| --------------------- | ------------------------------ |
+| `ticket_id`           | Unique ticket identifier       |
+| `created_at`          | Ticket creation timestamp      |
+| `category`            | Billing, Technical, or General |
+| `priority`            | Low, Medium, High, or Critical |
+| `status`              | Open, Resolved, or Escalated   |
+| `response_time_hrs`   | Time taken to respond          |
+| `resolution_time_hrs` | Time taken to resolve          |
+| `agent_id`            | Support agent identifier       |
+| `customer_rating`     | Customer rating                |
+| `issue_summary`       | Short description of the issue |
+
+For unresolved tickets, `resolution_time_hrs` and `customer_rating` may be unavailable.
+
+---
+
+# How the AI Query System Works
+
+The system does not allow the LLM to directly execute SQL.
+
+Instead, the LLM converts the user's question into a structured intent.
+
+For example:
 
 ```text
 How many tickets are currently open?
 ```
 
-The LLM converts the question into a structured intent such as:
+The LLM produces an intent similar to:
 
 ```json
 {
@@ -106,107 +261,28 @@ The LLM converts the question into a structured intent such as:
 }
 ```
 
-The application then validates the intent and generates the SQL query itself.
+The application then:
 
-The LLM does **not** directly execute arbitrary SQL.
+1. Validates the intent.
+2. Checks allowed columns.
+3. Checks allowed operators.
+4. Checks allowed aggregations.
+5. Builds the SQL query.
+6. Uses parameterized values.
+7. Executes the query against SQLite.
+8. Sends the result to the LLM for a concise explanation.
 
----
-
-## 3. AI-Powered Query Understanding
-
-The system uses the Groq API with the configured LLM model to understand natural-language questions.
-
-The current default model is:
-
-```text
-openai/gpt-oss-20b
-```
-
-The LLM is used for:
-
-* Understanding user questions
-* Identifying the required operation
-* Identifying filters
-* Identifying grouping
-* Identifying sorting
-* Identifying time periods
-* Generating a concise natural-language explanation of results
+This approach gives the system more control than allowing the LLM to generate arbitrary SQL.
 
 ---
 
-## 4. Safe Query Execution
+# REST API
 
-Instead of allowing the LLM to generate unrestricted SQL, the application follows:
+The project provides a REST API using FastAPI.
 
-```text
-User Question
-      ↓
-LLM
-      ↓
-Structured Intent
-      ↓
-Validation
-      ↓
-Application-generated SQL
-      ↓
-SQLite
-```
+## Available Endpoints
 
-This provides better control over:
-
-* Allowed columns
-* Allowed operators
-* Allowed aggregations
-* Allowed grouping fields
-* Result limits
-* Time periods
-* Query structure
-
-SQL values are parameterized rather than directly concatenated into SQL statements.
-
----
-
-# 🚨 5. Anomaly Detection
-
-Anomaly detection is implemented separately from the LLM.
-
-This is intentional.
-
-The LLM is responsible for natural-language understanding, while deterministic Python logic handles anomaly detection so that the rules remain predictable and reproducible.
-
-The system detects cases including:
-
-### Critical unresolved tickets
-
-Critical-priority tickets that remain unresolved beyond the configured threshold.
-
-### High-priority unresolved tickets
-
-High-priority tickets that remain unresolved beyond the configured threshold.
-
-### Long unresolved tickets
-
-Unresolved tickets that have remained open for an extended period.
-
-### Resolution-time outliers
-
-Unusually high resolution times detected using an IQR-based statistical method.
-
-### Response-time outliers
-
-Unusually high response times detected using an IQR-based statistical method.
-
-Statistical outliers are reported separately from active SLA-style issues.
-
----
-
-# 🌐 REST API
-
-The application exposes its functionality using **FastAPI REST APIs**.
-
-## API Endpoints
-
-| Method | Endpoint                       | Description                                   |
+| Method | Endpoint                       | Purpose                                       |
 | ------ | ------------------------------ | --------------------------------------------- |
 | GET    | `/health`                      | Check API health                              |
 | POST   | `/query`                       | Ask a natural-language question               |
@@ -216,15 +292,40 @@ The application exposes its functionality using **FastAPI REST APIs**.
 
 ---
 
-# 🔍 Query API
+# Health API
 
-## Endpoint
+## Request
+
+```http
+GET /health
+```
+
+Example:
+
+```text
+http://127.0.0.1:8000/health
+```
+
+Example response:
+
+```json
+{
+  "status": "healthy",
+  "service": "AI Support Intelligence"
+}
+```
+
+---
+
+# Query API
+
+## Request
 
 ```http
 POST /query
 ```
 
-### Request
+Example JSON:
 
 ```json
 {
@@ -232,35 +333,28 @@ POST /query
 }
 ```
 
-### Example Response
+Example response structure:
 
 ```json
 {
   "question": "How many tickets are currently open?",
-  "answer": "There are 123 open tickets.",
+  "answer": "There are currently 123 open tickets.",
   "result": [
     {
       "count": 123
     }
   ],
   "intent": {
-    "intent": "count",
-    "filters": [
-      {
-        "column": "status",
-        "operator": "=",
-        "value": "Open"
-      }
-    ]
+    "intent": "count"
   }
 }
 ```
 
-The exact result values depend on the dataset.
+The exact values depend on the dataset.
 
 ---
 
-# 🚨 Anomaly API
+# Anomaly API
 
 ## All Tickets
 
@@ -280,48 +374,88 @@ GET /anomalies?period=this_week
 GET /anomalies?period=this_month
 ```
 
-The response contains detected anomalies along with information such as:
+The response contains information such as:
 
 * Ticket ID
 * Priority
 * Status
 * Category
 * Agent
-* Resolution time
 * Response time
+* Resolution time
 * Anomaly type
 * Reason
 
 ---
 
-# ❤️ Health API
+# Interactive API Documentation
 
-## Endpoint
+FastAPI automatically provides Swagger documentation.
 
-```http
-GET /health
+After starting the API, open:
+
+```text
+http://127.0.0.1:8000/docs
 ```
 
-Example response:
-
-```json
-{
-  "status": "healthy",
-  "service": "AI Support Intelligence"
-}
-```
+This allows the evaluator to test all REST endpoints directly from the browser.
 
 ---
 
-# 🖥️ Streamlit UI
+# Anomaly Detection
 
-A minimal Streamlit interface is included.
+Anomaly detection is implemented using deterministic Python logic instead of relying on the LLM.
 
-The UI provides two primary sections:
+This makes anomaly results:
 
-### 💬 Ask Questions
+* Reproducible
+* Explainable
+* Testable
+* Independent of LLM randomness
 
-Users can enter questions such as:
+## Rule-Based Detection
+
+The system checks for situations such as:
+
+```text
+Critical priority + unresolved + beyond threshold
+```
+
+```text
+High priority + unresolved + beyond threshold
+```
+
+```text
+Unresolved + extended waiting time
+```
+
+## Statistical Detection
+
+Response and resolution times can also be checked for statistical outliers using the Interquartile Range method.
+
+```text
+IQR = Q3 - Q1
+
+Upper Bound = Q3 + 1.5 x IQR
+
+Lower Bound = Q1 - 1.5 x IQR
+```
+
+Values outside the calculated range can be flagged as statistical outliers.
+
+---
+
+# Streamlit User Interface
+
+The project includes a minimal Streamlit UI.
+
+The UI contains two main sections:
+
+## Ask Questions
+
+Users can enter questions in natural language.
+
+Examples:
 
 ```text
 How many tickets are currently open?
@@ -335,13 +469,15 @@ Which agent resolved the most tickets this month?
 What is the average customer rating for Technical category tickets?
 ```
 
-The UI sends the question to the FastAPI `/query` endpoint.
+```text
+How many Critical tickets are unresolved?
+```
 
 ---
 
-### 🚨 Anomalies
+## Anomalies
 
-The anomaly section allows users to select:
+Users can select:
 
 ```text
 All tickets
@@ -349,7 +485,7 @@ This week
 This month
 ```
 
-The UI displays:
+The interface displays:
 
 * Total anomalies
 * Critical anomalies
@@ -359,297 +495,9 @@ The UI displays:
 
 ---
 
-# 📁 Project Structure
+# Example Questions
 
-```text
-ai-support-intelligence/
-│
-├── app/
-│   ├── __init__.py
-│   ├── main.py
-│   │
-│   ├── api/
-│   │   ├── __init__.py
-│   │   ├── routes_query.py
-│   │   ├── routes_anomaly.py
-│   │   └── routes_health.py
-│   │
-│   ├── core/
-│   │   ├── __init__.py
-│   │   ├── config.py
-│   │   └── database.py
-│   │
-│   ├── services/
-│   │   ├── __init__.py
-│   │   ├── llm_service.py
-│   │   ├── query_service.py
-│   │   ├── anomaly_service.py
-│   │   └── ingestion.py
-│   │
-│   ├── models/
-│   │   ├── __init__.py
-│   │   └── schemas.py
-│   │
-│   └── utils/
-│       ├── __init__.py
-│       └── sql_validator.py
-│
-├── data/
-│   └── support_tickets.csv
-│
-├── database/
-│   └── support_tickets.db
-│
-├── ui/
-│   └── streamlit_app.py
-│
-├── tests/
-│   ├── test_api.py
-│   ├── test_anomaly.py
-│   └── test_query.py
-│
-├── .env
-├── .env.example
-├── .gitignore
-├── requirements.txt
-└── README.md
-```
-
----
-
-# 🛠️ Technology Stack
-
-| Component            | Technology           |
-| -------------------- | -------------------- |
-| Programming Language | Python               |
-| API Framework        | FastAPI              |
-| Web UI               | Streamlit            |
-| Database             | SQLite               |
-| Data Processing      | Pandas               |
-| Numerical Processing | NumPy                |
-| ORM / Database Layer | SQLAlchemy           |
-| LLM                  | Groq API             |
-| LLM Model            | `openai/gpt-oss-20b` |
-| API Server           | Uvicorn              |
-| Testing              | Pytest               |
-
----
-
-# 📊 Dataset
-
-The application uses:
-
-```text
-data/support_tickets.csv
-```
-
-The dataset contains 500 support tickets.
-
-## Columns
-
-| Column                | Description                    |
-| --------------------- | ------------------------------ |
-| `ticket_id`           | Unique ticket identifier       |
-| `created_at`          | Ticket creation timestamp      |
-| `category`            | Billing, Technical, or General |
-| `priority`            | Low, Medium, High, or Critical |
-| `status`              | Open, Resolved, or Escalated   |
-| `response_time_hrs`   | Time taken to respond          |
-| `resolution_time_hrs` | Time taken to resolve          |
-| `agent_id`            | Support agent identifier       |
-| `customer_rating`     | Customer rating                |
-| `issue_summary`       | Short description of the issue |
-
-For unresolved tickets, resolution time and customer rating may be unavailable.
-
----
-
-# ⚙️ Installation
-
-## Requirements
-
-Install:
-
-* Python 3.10+
-* Git
-* A Groq API key
-
-No paid database or cloud infrastructure is required.
-
----
-
-# 1. Clone the Repository
-
-After the project is uploaded to GitHub:
-
-```powershell
-git clone https://github.com/123Aimu321/ai-support-intelligence.git
-```
-
-Enter the project directory:
-
-```powershell
-cd ai-support-intelligence
-```
-
----
-
-# 2. Create a Virtual Environment
-
-Windows PowerShell:
-
-```powershell
-py -3.13 -m venv .venv
-```
-
-Activate it:
-
-```powershell
-.\.venv\Scripts\Activate.ps1
-```
-
-If PowerShell blocks activation, use:
-
-```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
-
-Then activate again:
-
-```powershell
-.\.venv\Scripts\Activate.ps1
-```
-
----
-
-# 3. Install Dependencies
-
-```powershell
-pip install -r requirements.txt
-```
-
----
-
-# 4. Configure the Groq API
-
-Create a file named:
-
-```text
-.env
-```
-
-Add:
-
-```env
-GROQ_API_KEY=your_actual_groq_api_key
-GROQ_MODEL=openai/gpt-oss-20b
-```
-
-Never commit the real `.env` file to GitHub.
-
-The repository should contain `.env.example`, not the actual API key.
-
----
-
-# 5. Load the Dataset
-
-The database is initialized automatically when the FastAPI application starts.
-
-You can also manually initialize it using:
-
-```powershell
-python -c "from app.services.ingestion import initialize_database; print('Loaded tickets:', initialize_database())"
-```
-
-Expected output:
-
-```text
-Loaded tickets: 500
-```
-
-This creates:
-
-```text
-database/support_tickets.db
-```
-
----
-
-# ▶️ Running the Application
-
-## Start the FastAPI Server
-
-From the project root:
-
-```powershell
-uvicorn app.main:app --reload
-```
-
-The API will be available at:
-
-```text
-http://127.0.0.1:8000
-```
-
-FastAPI also provides interactive API documentation at:
-
-```text
-http://127.0.0.1:8000/docs
-```
-
----
-
-# ▶️ Start the Streamlit UI
-
-Open a second PowerShell terminal.
-
-Navigate to the project:
-
-```powershell
-cd "C:\Users\aiman\Desktop\new\ai intern\ai-support-intelligence"
-```
-
-Activate the environment:
-
-```powershell
-.\.venv\Scripts\Activate.ps1
-```
-
-Run:
-
-```powershell
-streamlit run ui/streamlit_app.py
-```
-
-The UI will normally open at:
-
-```text
-http://localhost:8501
-```
-
----
-
-# 🧪 Testing the API
-
-Once FastAPI is running, open:
-
-```text
-http://127.0.0.1:8000/docs
-```
-
-The Swagger interface allows the evaluator to test:
-
-```text
-GET /health
-POST /query
-GET /anomalies
-```
-
----
-
-# 💬 Example Natural-Language Questions
-
-The following questions are supported:
+The following are examples of questions supported by the system.
 
 ### Ticket Count
 
@@ -675,13 +523,13 @@ Show me all Critical tickets not resolved within 12 hours.
 What is the average customer rating for Technical category tickets?
 ```
 
-### Anomalies
+### Anomaly Detection
 
 ```text
 Are there any anomalies in resolution times this week?
 ```
 
-Other supported questions can include:
+Other examples:
 
 ```text
 How many tickets are in the Billing category?
@@ -705,75 +553,242 @@ Show me unresolved Critical tickets.
 
 ---
 
-# 🧠 LLM Architecture
+# Installation
 
-The LLM is not used to directly access the database.
+## Requirements
 
-Instead, it acts as a natural-language understanding layer.
+Install the following:
 
-### Step 1 — User asks a question
+* Python 3.10 or newer
+* Git
+* Groq API key
 
-```text
-How many open tickets are there?
-```
+The project does not require:
 
-### Step 2 — LLM identifies intent
-
-```json
-{
-  "intent": "count",
-  "filters": [
-    {
-      "column": "status",
-      "operator": "=",
-      "value": "Open"
-    }
-  ]
-}
-```
-
-### Step 3 — Application validates the intent
-
-The validator checks:
-
-* Intent
-* Columns
-* Operators
-* Aggregations
-* Grouping
-* Sorting
-* Result limits
-* Time period
-
-### Step 4 — Application generates SQL
-
-The SQL is created by Python rather than trusting arbitrary LLM-generated SQL.
-
-### Step 5 — SQLite executes the query
-
-```text
-SQLite
-   ↓
-Query Result
-```
-
-### Step 6 — LLM explains the result
-
-The result is passed back to the LLM to generate a concise natural-language response.
+* PostgreSQL
+* Docker
+* Paid cloud infrastructure
+* Paid AI APIs
 
 ---
 
-# 🔐 Security and Query Safety
+# 1. Clone the Repository
 
-Several controls are implemented to prevent unrestricted database access.
+```powershell
+git clone https://github.com/123Aimu321/ai-support-intelligence.git
+```
+
+Move into the project directory:
+
+```powershell
+cd ai-support-intelligence
+```
+
+---
+
+# 2. Create Virtual Environment
+
+On Windows PowerShell:
+
+```powershell
+py -3.13 -m venv .venv
+```
+
+Activate it:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+If PowerShell blocks activation:
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+Then activate again:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+---
+
+# 3. Install Dependencies
+
+```powershell
+pip install -r requirements.txt
+```
+
+---
+
+# 4. Configure Groq
+
+Create a file named:
+
+```text
+.env
+```
+
+Add:
+
+```env
+GROQ_API_KEY=your_actual_groq_api_key
+GROQ_MODEL=openai/gpt-oss-20b
+```
+
+The repository includes `.env.example` as a template.
+
+Do not upload your actual `.env` file or API key to GitHub.
+
+---
+
+# 5. Initialize the Database
+
+The database is automatically initialized when FastAPI starts.
+
+It can also be initialized manually:
+
+```powershell
+python -c "from app.services.ingestion import initialize_database; print('Loaded tickets:', initialize_database())"
+```
+
+Expected output:
+
+```text
+Loaded tickets: 500
+```
+
+This creates:
+
+```text
+database/support_tickets.db
+```
+
+---
+
+# Running the Application
+
+## Start FastAPI
+
+From the project root:
+
+```powershell
+uvicorn app.main:app --reload
+```
+
+The API will run at:
+
+```text
+http://127.0.0.1:8000
+```
+
+Swagger documentation:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+---
+
+# Start Streamlit
+
+Open a second PowerShell terminal.
+
+Navigate to the project:
+
+```powershell
+cd ai-support-intelligence
+```
+
+Activate the environment:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+Run:
+
+```powershell
+streamlit run ui/streamlit_app.py
+```
+
+The UI will normally be available at:
+
+```text
+http://localhost:8501
+```
+
+---
+
+# Complete Startup Process
+
+```text
+Clone Repository
+      |
+      v
+Create Virtual Environment
+      |
+      v
+Install Requirements
+      |
+      v
+Create .env
+      |
+      v
+Add Groq API Key
+      |
+      v
+Start FastAPI
+      |
+      v
+Start Streamlit
+      |
+      v
+Open Browser
+      |
+      +----------------------+
+      |                      |
+      v                      v
+Ask Questions          Check Anomalies
+```
+
+---
+
+# Testing
+
+Tests are located in:
+
+```text
+tests/
+```
+
+Run all tests using:
+
+```powershell
+pytest
+```
+
+The test suite covers important functionality including:
+
+* API behavior
+* Query processing
+* Anomaly detection
+* Query validation
+
+---
+
+# Security and Query Safety
+
+The project uses several controls to prevent unsafe database operations.
 
 ## Allowed Columns
 
-Only predefined dataset columns can be queried.
+Only known dataset columns can be queried.
 
 ## Allowed Operations
 
-Only supported operations are accepted:
+Supported operations include:
 
 ```text
 count
@@ -786,276 +801,52 @@ group_average
 list
 ```
 
-## Parameterized Values
+## Parameterized SQL
 
-Database values are passed using SQL parameters rather than unsafe string concatenation.
+Values are passed to SQLite using parameters instead of unsafe string concatenation.
 
 ## Result Limits
 
-The query layer limits returned records to prevent unnecessarily large responses.
+Query results are limited to prevent unnecessarily large responses.
 
-## No Arbitrary SQL From the LLM
+## No Arbitrary SQL
 
-The LLM generates a structured intent, not executable SQL.
+The LLM does not directly execute SQL.
 
-The application validates the intent and constructs the SQL.
-
----
-
-# 🚨 Anomaly Detection Design
-
-Anomaly detection is deliberately deterministic.
-
-This avoids relying on an LLM for numerical or rule-based decisions.
-
-## Rule-Based Detection
-
-Examples:
-
-```text
-Critical + unresolved + older than threshold
-```
-
-```text
-High + unresolved + older than threshold
-```
-
-```text
-Unresolved + older than extended threshold
-```
-
-## Statistical Detection
-
-For response and resolution times, the application uses the Interquartile Range (IQR) approach.
-
-Conceptually:
-
-```text
-IQR = Q3 - Q1
-
-Lower Bound = Q1 - 1.5 × IQR
-Upper Bound = Q3 + 1.5 × IQR
-```
-
-Values outside the expected range can be flagged as statistical outliers.
-
-This provides a simple and explainable anomaly-detection approach suitable for the assessment dataset.
+The application converts the validated structured intent into SQL.
 
 ---
 
-# 📅 Time Period Handling
+# Time Period Handling
 
-The system supports:
+The query system supports:
 
 ```text
 this_week
 this_month
 ```
 
-Because the assessment dataset is historical rather than a continuously updated production stream, the application uses the latest available dataset timestamp as the reference point for these relative periods.
+The dataset is historical rather than a live production data stream.
 
-This makes the behavior deterministic when the application is evaluated later.
+Therefore, relative time periods are calculated using the latest available timestamp in the dataset as the reference point.
 
----
-
-# 🧪 Test Suite
-
-Tests are located in:
-
-```text
-tests/
-```
-
-including:
-
-```text
-test_api.py
-test_anomaly.py
-test_query.py
-```
-
-Run:
-
-```powershell
-pytest
-```
-
-The tests cover key application behavior such as:
-
-* API responses
-* Query processing
-* Anomaly detection
-* Validation
+This makes evaluation behavior deterministic.
 
 ---
 
-# 🐛 Common Problems
-
-## Groq API Error
-
-If the application reports an authentication error:
-
-Check:
-
-```text
-.env
-```
-
-Make sure:
-
-```env
-GROQ_API_KEY=your_actual_key
-```
-
-is present.
-
----
-
-## Model Error
-
-Check:
-
-```env
-GROQ_MODEL=openai/gpt-oss-20b
-```
-
-The model must be available for the configured Groq account.
-
----
-
-## Database Not Found
-
-Run:
-
-```powershell
-python -c "from app.services.ingestion import initialize_database; print('Loaded tickets:', initialize_database())"
-```
-
-The database will be recreated from the CSV.
-
----
-
-## API Connection Error in Streamlit
-
-Make sure FastAPI is running first:
-
-```powershell
-uvicorn app.main:app --reload
-```
-
-Then start Streamlit:
-
-```powershell
-streamlit run ui/streamlit_app.py
-```
-
-The Streamlit UI expects the API at:
-
-```text
-http://127.0.0.1:8000
-```
-
----
-
-# 🔄 Complete Startup Flow
-
-For a fresh machine:
-
-```text
-1. Install Python
-        ↓
-2. Clone GitHub repository
-        ↓
-3. Open project folder
-        ↓
-4. Create virtual environment
-        ↓
-5. Activate virtual environment
-        ↓
-6. pip install -r requirements.txt
-        ↓
-7. Create .env
-        ↓
-8. Add Groq API key
-        ↓
-9. Start FastAPI
-        ↓
-10. Start Streamlit
-        ↓
-11. Open browser
-        ↓
-12. Ask questions / check anomalies
-```
-
----
-
-# 🖥️ Evaluator Quick Start
-
-After cloning the repository:
-
-```powershell
-cd ai-support-intelligence
-```
-
-Create and activate the environment:
-
-```powershell
-py -3.13 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-```
-
-Install dependencies:
-
-```powershell
-pip install -r requirements.txt
-```
-
-Configure `.env`:
-
-```env
-GROQ_API_KEY=your_actual_groq_api_key
-GROQ_MODEL=openai/gpt-oss-20b
-```
-
-Start the API:
-
-```powershell
-uvicorn app.main:app --reload
-```
-
-In another terminal:
-
-```powershell
-streamlit run ui/streamlit_app.py
-```
-
-Then open:
-
-```text
-http://localhost:8501
-```
-
-For API testing:
-
-```text
-http://127.0.0.1:8000/docs
-```
-
----
-
-# 🏗️ Design Decisions
+# Design Decisions
 
 ## Why SQLite?
 
 SQLite was selected because:
 
-* No external database server is required
-* No Docker database setup is required
-* It is completely free
-* It is sufficient for the 500-row assessment dataset
-* It makes evaluator setup simple
+* It requires no separate database server.
+* It is free.
+* It is easy to configure.
+* It works well for a 500-row assessment dataset.
+* Evaluators can run the project locally with minimal setup.
 
-For production workloads, PostgreSQL or another managed database could be introduced.
+For a production system with many concurrent users, PostgreSQL would be a better option.
 
 ---
 
@@ -1064,180 +855,248 @@ For production workloads, PostgreSQL or another managed database could be introd
 FastAPI provides:
 
 * REST API support
-* Automatic request validation
+* Request validation
 * Type-safe schemas
-* Swagger/OpenAPI documentation
-* High performance
+* Automatic Swagger documentation
 * Simple Python integration
+* Good performance
 
 ---
 
 ## Why Streamlit?
 
-Streamlit was selected for the minimal UI because it allows the project to provide a usable interface without introducing unnecessary frontend complexity.
+Streamlit was selected because the assessment requires a minimal UI.
 
-The UI communicates with the FastAPI backend rather than directly accessing the database.
+It allows a functional interface to be created without adding unnecessary frontend complexity.
 
----
-
-## Why Deterministic Anomaly Detection?
-
-Anomaly detection involves numerical and rule-based decisions.
-
-Using deterministic Python logic makes the results:
-
-* Reproducible
-* Explainable
-* Testable
-* Independent of LLM randomness
-
-The LLM is therefore used where it provides the most value: natural-language understanding and result explanation.
+The UI communicates with FastAPI rather than directly accessing the database.
 
 ---
 
-# ⚖️ Trade-offs
+## Why Groq?
 
-### SQLite vs PostgreSQL
+Groq provides fast LLM inference and can be used through its available free-tier access.
 
-SQLite reduces setup complexity but is not ideal for a large multi-user production system.
-
-### Streamlit vs React
-
-Streamlit allows rapid development of a minimal assessment UI. React would provide greater control for a production frontend.
-
-### Groq vs Local LLM
-
-Groq provides a simple hosted inference option with a free tier, while a local Ollama model could remove the external API dependency but would require local model resources.
-
-### Structured Intent vs LLM-Generated SQL
-
-Structured intent requires more application-side logic but provides significantly better control and safety than executing arbitrary LLM-generated SQL.
+The application keeps the LLM integration isolated inside the LLM service so that another provider or a local model can be substituted later.
 
 ---
 
-# 🚀 Possible Future Improvements
+## Why Structured Intent Instead of LLM-Generated SQL?
 
-For a production-ready version, the system could be extended with:
+The LLM generates a structured representation of the user's request rather than unrestricted SQL.
+
+This gives the application greater control over:
+
+* Columns
+* Filters
+* Operators
+* Aggregations
+* Grouping
+* Sorting
+* Limits
+
+---
+
+# Future Improvements
+
+Possible production improvements include:
 
 * PostgreSQL
-* Authentication and authorization
+* User authentication
 * Role-based access control
-* Background ingestion jobs
+* Background data ingestion
 * Scheduled anomaly detection
-* Email/Slack alerts
+* Email or Slack alerts
 * Agent performance dashboards
-* More advanced SLA rules
-* Configurable anomaly thresholds
-* Caching
+* Configurable SLA thresholds
 * Query history
 * Conversation memory
-* Local LLM support through Ollama
-* Docker Compose deployment
-* CI/CD using GitHub Actions
-* Production monitoring and logging
+* Local LLM support using Ollama
+* Docker deployment
+* CI/CD with GitHub Actions
+* Production monitoring
+* Logging and observability
+* Caching
 
 ---
 
-# 🎯 Assessment Requirements Coverage
+# Assessment Requirement Coverage
 
-| Requirement                | Implementation                      |
-| -------------------------- | ----------------------------------- |
-| CSV ingestion              | Pandas + SQLite ingestion service   |
-| Queryable data             | SQLite database                     |
-| Natural-language questions | Groq LLM                            |
-| LLM integration            | Structured intent generation        |
-| Query validation           | SQL/intent validator                |
-| Anomaly detection          | Deterministic Python anomaly engine |
-| REST API                   | FastAPI                             |
-| `/query` endpoint          | Implemented                         |
-| `/anomalies` endpoint      | Implemented                         |
-| `/health` endpoint         | Implemented                         |
-| Minimal UI                 | Streamlit                           |
-| Testing                    | Pytest                              |
-| Documentation              | README                              |
-| No paid database           | SQLite                              |
-| Python implementation      | Yes                                 |
+| Assessment Requirement     | Implementation               |
+| -------------------------- | ---------------------------- |
+| CSV ingestion              | Pandas + SQLite              |
+| Queryable data             | SQLite                       |
+| Natural-language questions | Groq LLM                     |
+| LLM integration            | Structured intent generation |
+| Query validation           | Intent/SQL validator         |
+| Anomaly detection          | Deterministic Python engine  |
+| REST API                   | FastAPI                      |
+| `/query`                   | Implemented                  |
+| `/anomalies`               | Implemented                  |
+| `/health`                  | Implemented                  |
+| Minimal UI                 | Streamlit                    |
+| Testing                    | Pytest                       |
+| Documentation              | README                       |
+| Python                     | Yes                          |
+| Paid database              | Not required                 |
 
 ---
 
-# 🔗 API Architecture Summary
+# Architecture Summary
 
 ```text
-                    ┌─────────────────────┐
-                    │    Streamlit UI     │
-                    └──────────┬──────────┘
-                               │ HTTP
-                               ▼
-                    ┌─────────────────────┐
-                    │    FastAPI REST     │
-                    │        API          │
-                    └──────────┬──────────┘
-                               │
-              ┌────────────────┼────────────────┐
-              │                │                │
-              ▼                ▼                ▼
-        Query Service    Anomaly Service    Health Route
-              │                │
-              ▼                ▼
-          Groq LLM          Pandas
-              │                │
-              ▼                │
-       Intent Validation       │
-              │                │
-              ▼                │
-          SQLAlchemy           │
-              │                │
-              └───────┬────────┘
-                      ▼
-              ┌───────────────┐
-              │     SQLite    │
-              └───────────────┘
+                    +------------------+
+                    |   Streamlit UI   |
+                    +--------+---------+
+                             |
+                             | HTTP
+                             v
+                    +------------------+
+                    |   FastAPI REST    |
+                    |       API         |
+                    +--------+---------+
+                             |
+             +---------------+---------------+
+             |                               |
+             v                               v
+      +-------------+                +---------------+
+      | Query       |                | Anomaly       |
+      | Service     |                | Service       |
+      +------+------+                +-------+-------+
+             |                               |
+             v                               v
+      +-------------+                +---------------+
+      | Groq LLM    |                | Python Rules  |
+      +------+------+                +-------+-------+
+             |                               |
+             v                               |
+      +-------------+                         |
+      | Structured  |                         |
+      | Intent      |                         |
+      +------+------+                         |
+             |                               |
+             v                               |
+      +-------------+                         |
+      | Validation  |                         |
+      +------+------+                         |
+             |                               |
+             +---------------+---------------+
+                             |
+                             v
+                    +------------------+
+                    | SQLite Database  |
+                    +------------------+
+                             ^
+                             |
+                    +------------------+
+                    | CSV Ingestion    |
+                    +------------------+
+                             ^
+                             |
+                    support_tickets.csv
 ```
 
 ---
 
-# 📌 Important Security Note
+# Walkthrough Talking Points
 
-Do **not** commit your real Groq API key.
+During the technical walkthrough, the project can be explained in the following order:
 
-Your repository should contain:
+## 1. Problem
 
-```text
-.env.example
-```
+The goal is to make customer support ticket data easier to query and monitor.
 
-but should **not** contain:
+## 2. Data Ingestion
+
+The CSV is validated and loaded into SQLite.
+
+## 3. Natural Language
+
+The user asks a question in normal English.
+
+## 4. LLM
+
+Groq interprets the question and produces a structured intent.
+
+## 5. Validation
+
+The application validates the generated intent.
+
+## 6. Database Query
+
+Python builds a safe, parameterized SQL query.
+
+## 7. Result Explanation
+
+The query result is converted into a concise natural-language response.
+
+## 8. Anomaly Detection
+
+Anomaly detection is handled using deterministic Python rules and statistical methods.
+
+## 9. REST API
+
+FastAPI exposes `/query`, `/anomalies`, and `/health`.
+
+## 10. UI
+
+Streamlit provides a simple interface for interacting with the API.
+
+---
+
+# Important Security Note
+
+Never commit your actual Groq API key.
+
+The following file should **not** be uploaded:
 
 ```text
 .env
 ```
 
-The `.env` file should be included in `.gitignore`.
+The repository should contain:
+
+```text
+.env.example
+```
+
+Example:
+
+```env
+GROQ_API_KEY=your_groq_api_key_here
+GROQ_MODEL=openai/gpt-oss-20b
+```
 
 ---
 
-# 👨‍💻 Author
+# Author
 
 **Aiman Parker**
 
-AI/ML Engineer | Python | FastAPI | SQL | Machine Learning | AI Applications
+AI/ML Engineer
+
+Skills demonstrated in this project include:
+
+* Python
+* FastAPI
+* REST APIs
+* SQL
+* SQLite
+* Pandas
+* Machine Learning concepts
+* LLM integration
+* Natural-language processing
+* Anomaly detection
+* Streamlit
 
 ---
 
-# 📄 Assessment
+# Assessment
 
-Developed as part of the:
+This project was developed as part of the:
 
 **End-to-End AI System Sprint — AI Engineer Technical Assessment**
 
-Organization:
-
 **DOTMappers IT Pvt. Ltd.**
 
-The implementation focuses on building a practical, explainable, and maintainable AI system using Python, an LLM, REST APIs, structured database querying, anomaly detection, and a minimal user interface.
-
----
-
-**One important thing before you push this:** your current project needs a small final cleanup to make the README match the repository exactly—especially `.gitignore`, `.env.example`, `requirements.txt` (the UI directly imports `requests`), and ideally a **single-command startup** script because the assessment specifically mentions that preference. We should do that before uploading the repo so the project manager can clone it and run it cleanly.
-#   A I _ S U P P O R T - I N T E L L I G E N C E  
- 
+The implementation demonstrates an end-to-end AI application combining data ingestion, database querying, LLM-based natural-language understanding, deterministic anomaly detection, REST APIs, and a web interface.
